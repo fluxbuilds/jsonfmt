@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build release binary
+        run: cargo build --release --verbose
+      - name: Package
+        run: |
+          mkdir -p dist
+          tar -czf dist/jsonfmt-${{ github.ref_name }}-linux-x86_64.tar.gz -C target/release jsonfmt
+          sha256sum dist/jsonfmt-${{ github.ref_name }}-linux-x86_64.tar.gz > dist/jsonfmt-${{ github.ref_name }}-linux-x86_64.tar.gz.sha256
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/jsonfmt-${{ github.ref_name }}-linux-x86_64.tar.gz
+            dist/jsonfmt-${{ github.ref_name }}-linux-x86_64.tar.gz.sha256
+          generate_release_notes: true
